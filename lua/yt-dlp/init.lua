@@ -33,7 +33,7 @@ end
 -- Function to play song using mpv
 function yt_dlp.play_song(song)
     -- Extract the URL from the song string (format: Title - URL)
-    local title, url = song:match("^(.-) - (https?://[^\n]+)$")
+    local title, url = song:match("^(.-) %|%| (https?://[^\n]+)$")
 
     if url then
         -- Play the URL with mpv
@@ -69,10 +69,7 @@ function yt_dlp.show_playlist()
         end,
     }):find()
 end
--- Function to reverse a string
-function reverse_string(str)
-    return str:reverse()
-end
+
 -- Function to control playback (Play, Pause, Stop)
 function yt_dlp.control_playback(action)
     -- Read the playlist into a table
@@ -90,21 +87,18 @@ function yt_dlp.control_playback(action)
     local song_url = ""
     if action == "play" then
         -- Play the latest song (first in the list)
-
-              -- Match the title and URL based on the new format (title || url)
-              local title, url = playlist[1]:match("^(.-) %|%| (https?://[^\n]+)$")
-
-              if title and url then
-                  os.execute("mpv --no-video --quiet " .. url .. " &")
-                  print("🎵 Playing: " .. title)  -- Show title of the song being played
-              else
-                  print("❌ Could not parse the song URL.")
-              end
+        song_url = playlist[1]:match("^(.-) %|%| (https?://[^\n]+)$")
 
         -- Alternatively, play a random song
         -- local random_index = math.random(#playlist)
         -- song_url = playlist[random_index]:match("^(.-) %|%| (https?://[^\n]+)$")
 
+        if song_url then
+            os.execute("mpv --no-video --quiet " .. song_url .. " &")
+            print("🎵 Playing: " .. playlist[1])  -- You can adjust to show more information about the song
+        else
+            print("❌ Could not parse the song URL.")
+        end
     elseif action == "pause" then
         -- Pause the current playback (assumes mpv is running)
         os.execute("mpv --no-video --pause")
