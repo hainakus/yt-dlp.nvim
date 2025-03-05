@@ -32,7 +32,16 @@ end
 
 -- Function to play song using mpv
 function yt_dlp.play_song(song)
-    os.execute("mpv --no-video --quiet " .. song .. " &")
+    -- Extract the URL from the song string (format: Title - URL)
+    local title, url = song:match("^(.-) - (https?://[^\n]+)$")
+
+    if url then
+        -- Play the URL with mpv
+        os.execute("mpv --no-video --quiet " .. url .. " &")
+        print("🎵 Playing: " .. title)
+    else
+        print("❌ Invalid song format")
+    end
 end
 
 -- Function to show the playlist with music names and URLs
