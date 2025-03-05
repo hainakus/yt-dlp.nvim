@@ -60,7 +60,7 @@ function yt_dlp.show_playlist()
                 local selection = action_state.get_selected_entry()
                 actions.close(prompt_bufnr)
                 if selection then
-                    yt_dlp.play_song(selection[1]:match("^(.-) - (.+)$"))
+                    yt_dlp.play_song(selection[1]:match("^(.*)%- (https?://[^\n]+)$")
                 end
             end
             map("i", "<CR>", select_song)
@@ -87,7 +87,7 @@ function yt_dlp.control_playback(action)
     local song_url = ""
     if action == "play" then
         -- Play the latest song (first in the list)
-        song_url = playlist[1]:match("^(.-) - (https?://[^\n]+)$")
+      song_url = playlist[1]:match("^(.*)%- (https?://[^\n]+)$")
 
         -- Alternatively, play a random song
         -- local random_index = math.random(#playlist)
