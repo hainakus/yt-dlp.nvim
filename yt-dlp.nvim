@@ -88,8 +88,8 @@ function yt_dlp.control_playback(action)
     local title = ""
     if action == "play" then
         -- Play the latest song (first in the list)
-
-        title, song_url = playlist[1]:match("^(.-) %|%| (https?://[^\n]+)$")
+        local random_index = math.random(#playlist)
+        title, song_url = playlist[random_index]:match("^(.-) %|%| (https?://[^\n]+)$")
 
         -- Alternatively, play a random song
         -- local random_index = math.random(#playlist)
@@ -97,7 +97,7 @@ function yt_dlp.control_playback(action)
 
         if song_url then
             os.execute("mpv --no-video --quiet " .. song_url .. " &")
-            print("🎵 Playing: " .. playlist[1])
+            print("🎵 Playing: " .. title)
         else
             print("❌ Could not parse the song URL.")
         end
