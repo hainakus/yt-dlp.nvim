@@ -1,0 +1,1 @@
+require("yt-dlp").setup()
