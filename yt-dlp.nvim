@@ -69,7 +69,10 @@ function yt_dlp.show_playlist()
         end,
     }):find()
 end
-
+-- Function to reverse a string
+function reverse_string(str)
+    return str:reverse()
+end
 -- Function to control playback (Play, Pause, Stop)
 function yt_dlp.control_playback(action)
     -- Read the playlist into a table
@@ -87,7 +90,13 @@ function yt_dlp.control_playback(action)
     local song_url = ""
     if action == "play" then
         -- Play the latest song (first in the list)
-        song_url = playlist[1]:match("^(.*)%- (https?://[^\n]+)$")
+        local reversed_song = reverse_string(playlist[1])
+
+        -- Match the URL using the reversed string
+        song_url = reversed_song:match("^(.-)%- (https?://[^\n]+)$")
+
+        -- Reverse the URL back to its original order
+        song_url = reverse_string(song_url)
 
         -- Alternatively, play a random song
         -- local random_index = math.random(#playlist)
