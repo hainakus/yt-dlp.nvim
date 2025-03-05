@@ -96,14 +96,14 @@ function yt_dlp.control_playback(action)
         -- song_url = playlist[random_index]:match("^(.-) %|%| (https?://[^\n]+)$")
 
         if song_url then
-            os.execute("mpv --no-video --quiet " .. song_url .. " &")
+            os.execute("mpv --no-video --quiet " .. song_url .. " > /dev/null 2>&1 &")
             print("🎵 Playing: " .. title)
         else
             print("❌ Could not parse the song URL.")
         end
     elseif action == "pause" then
         -- Pause the current playback (assumes mpv is running)
-        os.execute("mpv --no-video --pause")
+        os.execute("mpv --no-video --pause > /dev/null 2>&1")
         print("⏸️ Paused playback.")
     elseif action == "stop" then
         -- Stop the current playback
