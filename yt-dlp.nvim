@@ -72,12 +72,41 @@ end
 
 -- Function to control playback (Play, Pause, Stop)
 function yt_dlp.control_playback(action)
+    -- Read the playlist into a table
+    local playlist = {}
+    for line in io.lines(playlist_file) do
+        table.insert(playlist, line)
+    end
+
+    -- If the playlist is empty, do nothing
+    if #playlist == 0 then
+        print("❌ No songs in the playlist.")
+        return
+    end
+
+    local song_url = ""
     if action == "play" then
-        os.execute("mpv --no-video --pause")
+        -- Play the latest song (first in the list)
+        song_url = playlist[1]:match("^(.-) - (https?://[^\n]+)$")
+
+        -- Alternatively, play a random song
+        -- local random_index = math.random(#playlist)
+        -- song_url = playlist[random_index]:match("^(.-) - (https?://[^\n]+)$")
+
+        if song_url then
+            os.execute("mpv --no-video --quiet " .. song_url .. " &")
+            print("🎵 Playing: " .. playlist[1])  -- You can adjust to show more information about the song
+        else
+            print("❌ Could not parse the song URL.")
+        end
     elseif action == "pause" then
+        -- Pause the current playback (assumes mpv is running)
         os.execute("mpv --no-video --pause")
+        print("⏸️ Paused playback.")
     elseif action == "stop" then
+        -- Stop the current playback
         os.execute("pkill mpv")
+        print("🛑 Stopped playback.")
     end
 end
 
