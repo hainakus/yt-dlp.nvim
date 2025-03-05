@@ -25,7 +25,7 @@ function yt_dlp.add_to_playlist()
     title = title:match("^%s*(.-)%s*$")
 
     -- Append the title and URL to the playlist file
-    os.execute("echo '" .. title .. " - " .. url .. "' >> " .. playlist_file)
+    os.execute("echo '" .. title .. " || " .. url .. "' >> " .. playlist_file)
 
     print("✅ Added to playlist: " .. title)
 end
@@ -60,7 +60,7 @@ function yt_dlp.show_playlist()
                 local selection = action_state.get_selected_entry()
                 actions.close(prompt_bufnr)
                 if selection then
-                    yt_dlp.play_song(selection[1]:match("^(.*)%- (https?://[^\n]+)$"))
+                    yt_dlp.play_song(selection[1]:match("^(.-) %|%| (https?://[^\n]+)$"))
                 end
             end
             map("i", "<CR>", select_song)
@@ -90,24 +90,21 @@ function yt_dlp.control_playback(action)
     local song_url = ""
     if action == "play" then
         -- Play the latest song (first in the list)
-        local reversed_song = reverse_string(playlist[1])
 
-        -- Match the URL using the reversed string
-        song_url = reversed_song:match("^(.-)%- (https?://[^\n]+)$")
+              -- Match the title and URL based on the new format (title || url)
+              local title, url = playlist[1]:match("^(.-) %|%| (https?://[^\n]+)$")
 
-        -- Reverse the URL back to its original order
-        song_url = reverse_string(song_url)
+              if title and url then
+                  os.execute("mpv --no-video --quiet " .. url .. " &")
+                  print("🎵 Playing: " .. title)  -- Show title of the song being played
+              else
+                  print("❌ Could not parse the song URL.")
+              end
 
         -- Alternatively, play a random song
         -- local random_index = math.random(#playlist)
-        -- song_url = playlist[random_index]:match("^(.-) - (https?://[^\n]+)$")
+        -- song_url = playlist[random_index]:match("^(.-) %|%| (https?://[^\n]+)$")
 
-        if song_url then
-            os.execute("mpv --no-video --quiet " .. song_url .. " &")
-            print("🎵 Playing: " .. playlist[1])  -- You can adjust to show more information about the song
-        else
-            print("❌ Could not parse the song URL.")
-        end
     elseif action == "pause" then
         -- Pause the current playback (assumes mpv is running)
         os.execute("mpv --no-video --pause")
