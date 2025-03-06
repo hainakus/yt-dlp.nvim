@@ -141,15 +141,6 @@ function yt_dlp.play_next_song(current_index)
              current_index = current_index + 1
              yt_dlp.play_next_song(current_index)
          end
-
-        -- Play the song
-        yt_dlp.play_song(song)
-
-
-        -- Set a timer to play the next song after the duration of the current song
-        vim.defer_fn(function()
-            yt_dlp.play_next_song(current_index)
-        end, duration * 1000)  -- Convert seconds to milliseconds
     else
         print("❌ Could not parse the song URL.")
     end
