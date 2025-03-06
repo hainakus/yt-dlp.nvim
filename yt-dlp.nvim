@@ -30,40 +30,31 @@ function yt_dlp.add_to_playlist()
     print("✅ Added to playlist: " .. title)
 end
 
-
+-- Function to get the duration of the song (in seconds)
 function yt_dlp.get_song_duration(url)
-      local handle = io.popen("yt-dlp -f bestaudio --get-duration " .. url)
-      local duration = handle:read("*a")
-      handle:close()
+    local handle = io.popen("yt-dlp -f bestaudio --get-duration " .. url)
+    local duration = handle:read("*a")
+    handle:close()
 
-      -- Remove any leading/trailing whitespaces
-      if duration then
-          duration = duration:match("^%s*(.-)%s*$")
+    -- Remove any leading/trailing whitespaces
+    if duration then
+        duration = duration:match("^%s*(.-)%s*$")
 
-          -- Try matching h:mm:ss, mm:ss, or m:ss formats
-          local hours, minutes, seconds = duration:match("^(%d+):(%d+):(%d+)$")  -- h:mm:ss format
-          if not hours then
-              minutes, seconds = duration:match("^(%d+):(%d+)$")  -- mm:ss format
-          end
-          if not minutes then
-              minutes, seconds = duration:match("^(%d+):(%d+)$")  -- m:ss format (missing leading zero)
+        -- Match mm:ss or m:ss format
+        local min, sec = duration:match("^(%d+):(%d+)$")
 
-          if hours then
-              minutes = tonumber(hours) * 60 + tonumber(minutes)
-          end
-
-          -- Convert minutes to seconds and add the seconds
-          if minutes and seconds then
-              local total_seconds = tonumber(minutes) * 60 + tonumber(seconds)
-              return total_seconds * 1000  -- Convert to milliseconds
-          else
-              print("❌ Could not parse duration: " .. duration)
-              return nil
-          end
-      else
-          print("❌ Could not retrieve song duration for: " .. url)
-          return nil
-      end
+        if min and sec then
+            -- Convert minutes to seconds and add to seconds
+            local total_seconds = tonumber(min) * 60 + tonumber(sec)
+            return total_seconds * 1000  -- Convert to milliseconds
+        else
+            print("❌ Could not parse duration: " .. duration)
+            return nil
+        end
+    else
+        print("❌ Could not retrieve song duration for: " .. url)
+        return nil
+    end
 end
 
 -- Function to play the song using mpv
