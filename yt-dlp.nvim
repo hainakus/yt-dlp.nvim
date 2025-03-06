@@ -46,7 +46,7 @@ function yt_dlp.get_song_duration(url)
         if min and sec then
             -- Convert minutes to seconds and add to seconds
             local total_seconds = tonumber(min) * 60 + tonumber(sec)
-            return total_seconds * 1000  -- Convert to milliseconds
+            return total_seconds * 1  -- Convert to milliseconds
         else
             print("❌ Could not parse duration: " .. duration)
             return nil
