@@ -30,8 +30,7 @@ function yt_dlp.add_to_playlist()
     print("✅ Added to playlist: " .. title)
 end
 
--- Function to get the duration of the song (in seconds)
--- Function to get the duration of the song (in seconds)
+
 function yt_dlp.get_song_duration(url)
       local handle = io.popen("yt-dlp -f bestaudio --get-duration " .. url)
       local duration = handle:read("*a")
