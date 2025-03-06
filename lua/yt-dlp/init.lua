@@ -30,14 +30,43 @@ function yt_dlp.add_to_playlist()
     print("✅ Added to playlist: " .. title)
 end
 
--- Function to play song using mpv
+-- Function to get the duration of the song (in seconds)
+-- Function to get the duration of the song (in seconds)
+function yt_dlp.get_song_duration(url)
+    local handle = io.popen("yt-dlp -f bestaudio --get-duration " .. url)
+    local duration = handle:read("*a")
+    handle:close()
+
+    -- Remove any leading/trailing whitespaces
+    if duration then
+        duration = duration:match("^%s*(.-)%s*$")
+
+        -- Match mm:ss or m:ss format
+        local min, sec = duration:match("^(%d+):(%d+)$")
+
+        if min and sec then
+            -- Convert minutes to seconds and add to seconds
+            local total_seconds = tonumber(min) * 60 + tonumber(sec)
+            return total_seconds * 1000  -- Convert to milliseconds
+        else
+            print("❌ Could not parse duration: " .. duration)
+            return nil
+        end
+    else
+        print("❌ Could not retrieve song duration for: " .. url)
+        return nil
+    end
+end
+
+-- Function to play the song using mpv
 function yt_dlp.play_song(song)
     -- Extract the URL from the song string (format: Title - URL)
     local title, url = song:match("^(.-) %|%| (https?://[^\n]+)$")
 
     if url then
         -- Play the URL with mpv
-        os.execute("mpv --no-video --quiet " .. url .. " &")
+        local command = "mpv --no-video --quiet --msg-level=all=error " .. url .. " > /dev/null 2>&1 &"
+        os.execute(command)
         print("🎵 Playing: " .. title)
     else
         print("❌ Invalid song format")
@@ -70,10 +99,10 @@ function yt_dlp.show_playlist()
     }):find()
 end
 
--- Function to control playback (Play, Pause, Stop)
-function yt_dlp.control_playback(action)
-    -- Read the playlist into a table
+-- Function to play the next song in the playlist
+function yt_dlp.play_next_song(current_index)
     local playlist = {}
+    -- Read the playlist into a table
     for line in io.lines(playlist_file) do
         table.insert(playlist, line)
     end
@@ -84,26 +113,43 @@ function yt_dlp.control_playback(action)
         return
     end
 
-    local current_index = 1
-    local function play_next_song()
-        if current_index > #playlist then
-            current_index = 1  -- Reset to first song (repeat playlist)
-        end
-
-        local song = playlist[current_index]
-        local title, song_url = song:match("^(.-) %|%| (https?://[^\n]+)$")
-
-        if song_url then
-            os.execute("mpv --no-video --quiet --msg-level=all=error --loop " .. song_url .. " > /dev/null 2>&1 &")
-            print("🎵 Playing: " .. title)
-            current_index = current_index + 1  -- Move to the next song
-        else
-            print("❌ Could not parse the song URL.")
-        end
+    -- If the current index is greater than the number of songs, reset to the first song
+    if current_index > #playlist then
+        current_index = 1
     end
 
+    -- Get the current song from the playlist
+    local song = playlist[current_index]
+    local title, song_url = song:match("^(.-) %|%| (https?://[^\n]+)$")
+
+    if song_url then
+         -- Get the duration of the current song in seconds
+         local duration = yt_dlp.get_song_duration(song_url)
+
+         -- If duration is valid, schedule the next song
+         if duration then
+             -- Advance to the next song in the playlist
+             current_index = current_index + 1
+
+             -- Set a timer to play the next song after the duration of the current song
+             vim.defer_fn(function()
+                 yt_dlp.play_next_song(current_index)
+             end, duration * 1000)  -- Convert seconds to milliseconds
+         else
+             -- If we couldn't get the duration, skip to the next song
+             current_index = current_index + 1
+             yt_dlp.play_next_song(current_index)
+         end
+    else
+        print("❌ Could not parse the song URL.")
+    end
+end
+
+-- Function to control playback (Play, Pause, Stop)
+function yt_dlp.control_playback(action)
     if action == "play" then
-        play_next_song()
+        local current_index = 1  -- Start from the first song
+        yt_dlp.play_next_song(current_index)  -- Start playing the first song
     elseif action == "pause" then
         -- Pause the current playback (assumes mpv is running)
         os.execute("mpv --no-video --pause --quiet --msg-level=all=error > /dev/null 2>&1")
