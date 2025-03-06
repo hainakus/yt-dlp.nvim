@@ -122,6 +122,7 @@ function yt_dlp.play_next_song(current_index)
     local title, song_url = song:match("^(.-) %|%| (https?://[^\n]+)$")
 
     if song_url then
+         yt_dlp.play_song(song)
          -- Get the duration of the current song in seconds
          local duration = yt_dlp.get_song_duration(song_url)
 
