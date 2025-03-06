@@ -55,7 +55,7 @@ function yt_dlp.get_song_duration(url)
         -- Convert minutes to seconds and add the seconds
         if minutes and seconds then
             local total_seconds = tonumber(minutes) * 60 + tonumber(seconds)
-            return total_seconds * 1000  -- Convert to milliseconds
+            return total_seconds
         else
             print("❌ Could not parse duration: " .. duration)
             return nil
@@ -142,7 +142,7 @@ function yt_dlp.play_next_song(current_index)
              -- Set a timer to play the next song after the duration of the current song
              vim.defer_fn(function()
                  yt_dlp.play_next_song(current_index)
-             end, duration * 1)  -- Convert seconds to milliseconds
+             end, duration * 1000)  -- Convert seconds to milliseconds
          else
              -- If we couldn't get the duration, skip to the next song
              current_index = current_index + 1
