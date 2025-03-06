@@ -75,8 +75,14 @@ function yt_dlp.get_song_duration(url)
     local duration = handle:read("*a")
     handle:close()
 
-    -- Convert the duration from string to number and return
-    return tonumber(duration)
+    -- Remove any leading/trailing whitespaces
+    if duration then
+        duration = duration:match("^%s*(.-)%s*$")
+        return tonumber(duration)
+    else
+        print("❌ Could not retrieve song duration for: " .. url)
+        return nil
+    end
 end
 
 -- Function to play the song using mpv
@@ -118,14 +124,27 @@ function yt_dlp.play_next_song(current_index)
     local title, song_url = song:match("^(.-) %|%| (https?://[^\n]+)$")
 
     if song_url then
+         -- Get the duration of the current song in seconds
+         local duration = yt_dlp.get_song_duration(song_url)
+
+         -- If duration is valid, schedule the next song
+         if duration then
+             -- Advance to the next song in the playlist
+             current_index = current_index + 1
+
+             -- Set a timer to play the next song after the duration of the current song
+             vim.defer_fn(function()
+                 yt_dlp.play_next_song(current_index)
+             end, duration * 1000)  -- Convert seconds to milliseconds
+         else
+             -- If we couldn't get the duration, skip to the next song
+             current_index = current_index + 1
+             yt_dlp.play_next_song(current_index)
+         end
+
         -- Play the song
         yt_dlp.play_song(song)
 
-        -- Get the duration of the current song in seconds
-        local duration = yt_dlp.get_song_duration(song_url)
-
-        -- Advance to the next song in the playlist after the duration of the current song
-        current_index = current_index + 1
 
         -- Set a timer to play the next song after the duration of the current song
         vim.defer_fn(function()
