@@ -31,7 +31,6 @@ function yt_dlp.add_to_playlist()
 end
 
 -- Function to get the duration of the song (in seconds)
--- Function to get the duration of the song (in seconds)
 function yt_dlp.get_song_duration(url)
     local handle = io.popen("yt-dlp -f bestaudio --get-duration " .. url)
     local duration = handle:read("*a")
@@ -41,12 +40,21 @@ function yt_dlp.get_song_duration(url)
     if duration then
         duration = duration:match("^%s*(.-)%s*$")
 
-        -- Match mm:ss or m:ss format
-        local min, sec = duration:match("^(%d+):(%d+)$")
+        -- Try matching h:mm:ss, mm:ss, or m:ss formats
+        local hours, minutes, seconds = duration:match("^(%d+):(%d+):(%d+)$")  -- h:mm:ss format
+        if not hours then
+            minutes, seconds = duration:match("^(%d+):(%d+)$")  -- mm:ss format
+        end
+        if not minutes then
+            minutes, seconds = duration:match("^(%d+):(%d+)$")  -- m:ss format (missing leading zero)
 
-        if min and sec then
-            -- Convert minutes to seconds and add to seconds
-            local total_seconds = tonumber(min) * 60 + tonumber(sec)
+        if hours then
+            minutes = tonumber(hours) * 60 + tonumber(minutes)
+        end
+
+        -- Convert minutes to seconds and add the seconds
+        if minutes and seconds then
+            local total_seconds = tonumber(minutes) * 60 + tonumber(seconds)
             return total_seconds * 1000  -- Convert to milliseconds
         else
             print("❌ Could not parse duration: " .. duration)
@@ -134,7 +142,7 @@ function yt_dlp.play_next_song(current_index)
              -- Set a timer to play the next song after the duration of the current song
              vim.defer_fn(function()
                  yt_dlp.play_next_song(current_index)
-             end, duration * 1000)  -- Convert seconds to milliseconds
+             end, duration)  -- Convert seconds to milliseconds
          else
              -- If we couldn't get the duration, skip to the next song
              current_index = current_index + 1
