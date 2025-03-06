@@ -160,7 +160,70 @@ function yt_dlp.control_playback(action)
         print("🛑 Stopped playback.")
     end
 end
+-- Function to shuffle a table (Fisher-Yates shuffle algorithm)
+local function shuffle_table(t)
+    math.randomseed(os.time()) -- Seed random number generator
+    for i = #t, 2, -1 do
+        local j = math.random(1, i)
+        t[i], t[j] = t[j], t[i] -- Swap elements
+    end
+end
 
+-- Function to play the shuffled playlist
+function yt_dlp.play_shuffled()
+    local playlist = {}
+
+    -- Read playlist entries into a table
+    for line in io.lines(playlist_file) do
+        table.insert(playlist, line)
+    end
+
+    -- If the playlist is empty, do nothing
+    if #playlist == 0 then
+        print("❌ No songs in the playlist to shuffle.")
+        return
+    end
+
+    -- Shuffle the playlist
+    shuffle_table(playlist)
+
+    -- Function to play each song in sequence
+    local function play_next_shuffled_song(index)
+        if index > #playlist then
+            print("✅ Finished playing shuffled playlist.")
+            return
+        end
+
+        local song = playlist[index]
+        local title, url = song:match("^(.-) %|%| (https?://[^\n]+)$")
+
+        if url then
+            print("🎵 Playing: " .. title)
+
+            -- Get the song duration
+            local duration = yt_dlp.get_song_duration(url)
+
+            -- Play the current song
+            os.execute("mpv --no-video --quiet --msg-level=all=error " .. url .. " > /dev/null 2>&1 &")
+
+            -- Schedule next song
+            if duration then
+                vim.defer_fn(function()
+                    play_next_shuffled_song(index + 1)
+                end, duration * 1000)  -- Convert seconds to milliseconds
+            else
+                -- If duration fails, move to next song immediately
+                play_next_shuffled_song(index + 1)
+            end
+        else
+            print("❌ Invalid song format, skipping...")
+            play_next_shuffled_song(index + 1)
+        end
+    end
+
+    -- Start playing the first shuffled song
+    play_next_shuffled_song(1)
+end
 -- Setup commands and mappings
 function yt_dlp.setup()
     vim.api.nvim_create_user_command("YTAdd", yt_dlp.add_to_playlist, {})
@@ -168,6 +231,7 @@ function yt_dlp.setup()
     vim.api.nvim_create_user_command("YTPlay", function() yt_dlp.control_playback("play") end, {})
     vim.api.nvim_create_user_command("YTPause", function() yt_dlp.control_playback("pause") end, {})
     vim.api.nvim_create_user_command("YTStop", function() yt_dlp.control_playback("stop") end, {})
+    vim.api.nvim_create_user_command("YTPlayShuffle", yt_dlp.play_shuffled, {})
 end
 
 return yt_dlp
