@@ -142,7 +142,7 @@ function yt_dlp.play_next_song(current_index)
              -- Set a timer to play the next song after the duration of the current song
              vim.defer_fn(function()
                  yt_dlp.play_next_song(current_index)
-             end, duration)  -- Convert seconds to milliseconds
+             end, duration * 1)  -- Convert seconds to milliseconds
          else
              -- If we couldn't get the duration, skip to the next song
              current_index = current_index + 1
